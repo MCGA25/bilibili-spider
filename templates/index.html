@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B站视频爬虫系统</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#00A1D6',
+                        secondary: '#F2F2F2',
+                        accent: '#FF6B6B',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .bg-gradient {
+                background: linear-gradient(135deg, #00A1D6 0%, #0086B3 100%);
+            }
+            .card-shadow {
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-gradient text-white py-6">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="flex items-center mb-4 md:mb-0">
+                    <i class="fa fa-video-camera text-3xl mr-3"></i>
+                    <h1 class="text-2xl md:text-3xl font-bold">B站视频爬虫系统</h1>
+                </div>
+                <p class="text-sm md:text-base opacity-90">
+                    输入关键词，自动搜索并下载B站视频
+                </p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Info Card -->
+        <div class="bg-white rounded-lg p-4 mb-6 card-shadow">
+            <div class="flex items-center text-blue-600">
+                <i class="fa fa-info-circle mr-2"></i>
+                <h2 class="text-lg font-semibold">使用说明</h2>
+            </div>
+            <ul class="mt-2 text-gray-600 space-y-1">
+                <li><i class="fa fa-check-circle text-green-500 mr-2"></i> 输入关键词，多个关键词用空格或逗号分隔</li>
+                <li><i class="fa fa-check-circle text-green-500 mr-2"></i> 设置每个关键词的最大下载数量</li>
+                <li><i class="fa fa-check-circle text-green-500 mr-2"></i> 指定视频保存路径</li>
+                <li><i class="fa fa-check-circle text-green-500 mr-2"></i> 系统会自动搜索并下载视频</li>
+            </ul>
+        </div>
+
+        <!-- Form Card -->
+        <div class="bg-white rounded-lg p-6 mb-8 card-shadow">
+            <h2 class="text-xl font-bold mb-6 text-center text-gray-800">
+                <i class="fa fa-download mr-2 text-primary"></i>视频下载
+            </h2>
+            
+            <form id="downloadForm" class="space-y-6">
+                <!-- Keywords Input -->
+                <div>
+                    <label for="keywords" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fa fa-search mr-1 text-primary"></i>搜索关键词
+                    </label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                            <i class="fa fa-tag text-gray-400"></i>
+                        </span>
+                        <input type="text" id="keywords" name="keywords" 
+                               class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                               placeholder="请输入关键词，多个关键词用空格或逗号分隔（例如：无人机 编程 美食）" 
+                               required>
+                    </div>
+                    <p class="mt-1 text-sm text-gray-500">
+                        示例：无人机 编程 美食
+                    </p>
+                </div>
+
+                <!-- Max Downloads Input -->
+                <div>
+                    <label for="maxDownloads" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fa fa-file-video-o mr-1 text-primary"></i>最大下载数量
+                    </label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                            <i class="fa fa-number text-gray-400"></i>
+                        </span>
+                        <input type="number" id="maxDownloads" name="maxDownloads" 
+                               class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                               min="1" max="100" value="10" 
+                               required>
+                    </div>
+                    <p class="mt-1 text-sm text-gray-500">
+                        每个关键词的最大下载数量
+                    </p>
+                </div>
+
+                <!-- Save Path Input -->
+                <div>
+                    <label for="savePath" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fa fa-folder mr-1 text-primary"></i>保存路径
+                    </label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                            <i class="fa fa-path text-gray-400"></i>
+                        </span>
+                        <input type="text" id="savePath" name="savePath" 
+                               class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                               placeholder="请输入视频保存路径（默认：downloads）" 
+                               value="downloads">
+                    </div>
+                    <p class="mt-1 text-sm text-gray-500">
+                        示例：D:\videos\bilibili
+                    </p>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="pt-2">
+                    <button type="submit" id="submitBtn" 
+                            class="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center">
+                        <i class="fa fa-cloud-download mr-2"></i>
+                        <span>开始下载</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden">
+            <div class="bg-white rounded-lg p-6 mb-8 card-shadow">
+                <h2 class="text-xl font-bold mb-4 text-gray-800">
+                    <i class="fa fa-list-alt mr-2 text-primary"></i>下载结果
+                </h2>
+                
+                <!-- Loading Indicator -->
+                <div id="loading" class="py-12 flex flex-col items-center justify-center">
+                    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-primary mb-4"></div>
+                    <p class="text-gray-600">正在搜索和下载视频，请稍候...</p>
+                </div>
+
+                <!-- Success Result -->
+                <div id="successResult" class="hidden">
+                    <div class="flex items-center mb-4 text-green-600">
+                        <i class="fa fa-check-circle text-xl mr-2"></i>
+                        <h3 id="successMessage" class="text-lg font-semibold"></h3>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <p class="text-gray-600">
+                            <i class="fa fa-folder mr-1"></i>
+                            <span>保存路径：</span>
+                            <span id="savePathResult" class="font-mono text-sm bg-gray-100 px-2 py-1 rounded"></span>
+                        </p>
+                    </div>
+
+                    <!-- Video List -->
+                    <div class="mt-6">
+                        <h4 class="text-md font-semibold text-gray-700 mb-3">下载的视频：</h4>
+                        <div id="videoList" class="space-y-3">
+                            <!-- Video items will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Error Result -->
+                <div id="errorResult" class="hidden">
+                    <div class="flex items-center mb-4 text-red-600">
+                        <i class="fa fa-exclamation-circle text-xl mr-2"></i>
+                        <h3 id="errorMessage" class="text-lg font-semibold"></h3>
+                    </div>
+                    <p class="text-gray-600">请检查输入参数后重试。</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-6">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <p class="text-sm opacity-80 mb-4 md:mb-0">
+                    © 2026 B站视频爬虫系统 | 仅供学习使用
+                </p>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-sm opacity-80 hover:opacity-100 transition-opacity">
+                        <i class="fa fa-question-circle mr-1"></i>使用帮助
+                    </a>
+                    <a href="#" class="text-sm opacity-80 hover:opacity-100 transition-opacity">
+                        <i class="fa fa-github mr-1"></i>GitHub
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const downloadForm = document.getElementById('downloadForm');
+            const resultsSection = document.getElementById('resultsSection');
+            const loading = document.getElementById('loading');
+            const successResult = document.getElementById('successResult');
+            const errorResult = document.getElementById('errorResult');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            downloadForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Get form data
+                const keywords = document.getElementById('keywords').value.trim();
+                const maxDownloads = parseInt(document.getElementById('maxDownloads').value);
+                const savePath = document.getElementById('savePath').value.trim() || 'downloads';
+                
+                // Show results section and loading indicator
+                resultsSection.classList.remove('hidden');
+                loading.classList.remove('hidden');
+                successResult.classList.add('hidden');
+                errorResult.classList.add('hidden');
+                
+                // Disable submit button
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i><span>下载中...</span>';
+                
+                // Send request to server
+                fetch('/api/download', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        keywords: keywords,
+                        max_downloads: maxDownloads,
+                        save_path: savePath
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Hide loading indicator
+                    loading.classList.add('hidden');
+                    
+                    // Enable submit button
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fa fa-cloud-download mr-2"></i><span>开始下载</span>';
+                    
+                    if (data.status === 'success') {
+                        // Show success result
+                        successResult.classList.remove('hidden');
+                        document.getElementById('successMessage').textContent = data.message;
+                        document.getElementById('savePathResult').textContent = data.save_path;
+                        
+                        // Display video list
+                        const videoList = document.getElementById('videoList');
+                        videoList.innerHTML = '';
+                        
+                        if (data.results && data.results.length > 0) {
+                            data.results.forEach((video, index) => {
+                                const videoItem = document.createElement('div');
+                                videoItem.className = 'bg-gray-50 p-3 rounded-lg border border-gray-200';
+                                videoItem.innerHTML = `
+                                    <div class="flex items-start">
+                                        <div class="flex-shrink-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center mr-3">
+                                            ${index + 1}
+                                        </div>
+                                        <div class="flex-grow">
+                                            <h5 class="font-medium text-gray-800">${video.title}</h5>
+                                            <p class="text-sm text-gray-500 mt-1">
+                                                <i class="fa fa-user mr-1"></i> ${video.up}
+                                            </p>
+                                            <a href="${video.link}" target="_blank" class="text-primary hover:underline text-sm mt-1 inline-block">
+                                                <i class="fa fa-external-link mr-1"></i> 查看视频
+                                            </a>
+                                        </div>
+                                    </div>
+                                `;
+                                videoList.appendChild(videoItem);
+                            });
+                        } else {
+                            videoList.innerHTML = '<p class="text-gray-500 text-center py-4">未找到可下载的视频</p>';
+                        }
+                    } else {
+                        // Show error result
+                        errorResult.classList.remove('hidden');
+                        document.getElementById('errorMessage').textContent = data.message;
+                    }
+                })
+                .catch(error => {
+                    // Hide loading indicator
+                    loading.classList.add('hidden');
+                    
+                    // Enable submit button
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fa fa-cloud-download mr-2"></i><span>开始下载</span>';
+                    
+                    // Show error result
+                    errorResult.classList.remove('hidden');
+                    document.getElementById('errorMessage').textContent = '网络错误，请检查网络连接后重试。';
+                    console.error('Error:', error);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
