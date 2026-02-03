@@ -60,7 +60,7 @@ def download():
         if not keywords_list:
             return jsonify({'status': 'error', 'message': '关键词不能为空'})
         
-        # 开始下载
+        # 开始搜索并获取下载链接
         results = []
         total_downloaded = 0
         downloaded_links = set()
@@ -77,7 +77,7 @@ def download():
                 if not videos:
                     break
                 
-                # 下载视频
+                # 处理视频
                 for video in videos:
                     if keyword_downloaded >= max_downloads:
                         break
@@ -85,24 +85,21 @@ def download():
                     if video['link'] in downloaded_links:
                         continue
                     
-                    # 下载视频
-                    success = spider.download_video(video['link'])
+                    # 记录结果，包含下载链接
+                    results.append({
+                        'title': video['title'],
+                        'link': video['link'],
+                        'up': video['up'],
+                        'download_link': video.get('download_link', video['link'])
+                    })
                     
-                    if success:
-                        keyword_downloaded += 1
-                        total_downloaded += 1
-                        downloaded_links.add(video['link'])
-                        
-                        # 记录结果
-                        results.append({
-                            'title': video['title'],
-                            'link': video['link'],
-                            'up': video['up']
-                        })
+                    keyword_downloaded += 1
+                    total_downloaded += 1
+                    downloaded_links.add(video['link'])
             
         return jsonify({
             'status': 'success',
-            'message': f'下载完成，共下载 {total_downloaded} 个视频',
+            'message': f'搜索完成，共找到 {total_downloaded} 个视频',
             'results': results,
             'save_path': save_path
         })
