@@ -291,7 +291,7 @@
                                                 <a href="${video.link}" target="_blank" class="text-primary hover:underline text-sm inline-block">
                                                     <i class="fa fa-external-link mr-1"></i> 查看视频
                                                 </a>
-                                                <a href="${video.download_link}" target="_blank" class="text-green-600 hover:underline text-sm inline-block">
+                                                <a href="/api/download/video?url=${encodeURIComponent(video.download_link)}" class="text-green-600 hover:underline text-sm inline-block">
                                                     <i class="fa fa-download mr-1"></i> 下载视频
                                                 </a>
                                             </div>

@@ -107,5 +107,42 @@ def download():
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)})
 
+@app.route('/api/download/video', methods=['GET'])
+def download_video():
+    try:
+        # 获取视频链接参数
+        video_url = request.args.get('url', '').strip()
+        
+        # 验证参数
+        if not video_url:
+            return jsonify({'status': 'error', 'message': '视频链接不能为空'})
+        
+        # 创建爬虫实例
+        spider = BilibiliSpider()
+        
+        # 获取视频内容
+        video_content, file_name = spider.get_video_content(video_url)
+        
+        if not video_content:
+            return jsonify({'status': 'error', 'message': '获取视频内容失败'})
+        
+        # 返回视频文件，设置Content-Disposition头，使浏览器提示下载
+        from flask import send_file
+        import io
+        
+        # 创建文件对象
+        file_obj = io.BytesIO(video_content)
+        
+        # 返回文件，设置文件名和MIME类型
+        return send_file(
+            file_obj,
+            as_attachment=True,
+            download_name=file_name,
+            mimetype='video/mp4'
+        )
+        
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)})
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5678)
