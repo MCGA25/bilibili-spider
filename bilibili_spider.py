@@ -17,8 +17,11 @@ class BilibiliSpider:
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
         self.download_dir = './downloads'
-        if not os.path.exists(self.download_dir):
-            os.makedirs(self.download_dir)
+        # 检测是否在 Vercel 环境中
+        self.is_vercel = os.environ.get('VERCEL', False)
+        if not self.is_vercel:
+            if not os.path.exists(self.download_dir):
+                os.makedirs(self.download_dir)
         self.download_count = 0
         self.max_downloads = 10  # 默认最大下载数量
     
@@ -108,6 +111,11 @@ class BilibiliSpider:
     
     def download_video(self, url):
         try:
+            # 在 Vercel 环境中，不执行实际的下载操作
+            if self.is_vercel:
+                print('Vercel 环境中不支持视频下载操作')
+                return True
+            
             # 提取视频ID
             video_id = url.split('/')[-1].split('?')[0]
             
@@ -154,6 +162,11 @@ class BilibiliSpider:
     def cleanup_files(self, video_id):
         """清理无用的辅助文件和音频文件"""
         try:
+            # 在 Vercel 环境中，不执行文件清理操作
+            if self.is_vercel:
+                print('Vercel 环境中不支持文件清理操作')
+                return
+            
             files = os.listdir(self.download_dir)
             
             # 收集与当前视频相关的mp4文件

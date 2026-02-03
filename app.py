@@ -9,14 +9,22 @@ from bilibili_spider import BilibiliSpider
 
 app = Flask(__name__)
 
-# 设置上传和下载目录
-app.config['UPLOAD_FOLDER'] = 'uploads'
-app.config['DOWNLOAD_FOLDER'] = 'downloads'
+# 检测是否在 Vercel 环境中
+is_vercel = os.environ.get('VERCEL', False)
 
-# 确保目录存在
-for folder in [app.config['UPLOAD_FOLDER'], app.config['DOWNLOAD_FOLDER']]:
-    if not os.path.exists(folder):
-        os.makedirs(folder)
+# 设置上传和下载目录
+if is_vercel:
+    # 在 Vercel 环境中使用临时目录
+    app.config['UPLOAD_FOLDER'] = tempfile.gettempdir()
+    app.config['DOWNLOAD_FOLDER'] = tempfile.gettempdir()
+else:
+    # 本地环境使用固定目录
+    app.config['UPLOAD_FOLDER'] = 'uploads'
+    app.config['DOWNLOAD_FOLDER'] = 'downloads'
+    # 确保目录存在
+    for folder in [app.config['UPLOAD_FOLDER'], app.config['DOWNLOAD_FOLDER']]:
+        if not os.path.exists(folder):
+            os.makedirs(folder)
 
 @app.route('/')
 def index():
@@ -28,15 +36,19 @@ def download():
         # 获取请求参数
         keywords = request.json.get('keywords', '').strip()
         max_downloads = request.json.get('max_downloads', 10)
-        save_path = request.json.get('save_path', app.config['DOWNLOAD_FOLDER'])
         
         # 验证参数
         if not keywords:
             return jsonify({'status': 'error', 'message': '关键词不能为空'})
         
-        # 确保保存路径存在
-        if not os.path.exists(save_path):
-            os.makedirs(save_path)
+        # 在 Vercel 环境中，忽略用户指定的保存路径，使用临时目录
+        if is_vercel:
+            save_path = app.config['DOWNLOAD_FOLDER']
+        else:
+            save_path = request.json.get('save_path', app.config['DOWNLOAD_FOLDER'])
+            # 确保保存路径存在
+            if not os.path.exists(save_path):
+                os.makedirs(save_path)
         
         # 创建爬虫实例
         spider = BilibiliSpider()
